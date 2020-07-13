@@ -45,13 +45,13 @@ func main() {
 
 		// attach the policy to the role that allows running on ECS
 		_, err = iam.NewRolePolicyAttachment(ctx, "task-exec-policy", &iam.RolePolicyAttachmentArgs{
-			Role: taskRole.Name,
+			Role:      taskRole.Name,
 			PolicyArn: pulumi.String("arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"),
 		}, pulumi.Parent(taskRole))
 		if err != nil {
 			return err
 		}
-		
+
 		ctx.Export("clusterID", cluster.ID())
 
 		return nil

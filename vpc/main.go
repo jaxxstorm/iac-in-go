@@ -30,6 +30,8 @@ func main() {
 
 		ctx.Export("id", awsVpc.ID)
 		ctx.Export("arn", awsVpc.Arn)
+		ctx.Export("publicSubnets", awsVpc.PublicSubnets)
+		ctx.Export("privateSubnets", awsVpc.PrivateSubnets)
 		return nil
 	})
 }

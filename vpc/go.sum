@@ -97,6 +97,8 @@ github.com/jaxxstorm/pulumi-aws-vpc v2.2.1+incompatible h1:+9BmIbPrp3x+ak27VhUyE
 github.com/jaxxstorm/pulumi-aws-vpc v2.2.2-0.20200712170006-0d1a95681dd5+incompatible h1:vtGcWZlcDCGCTLqUMkSt6/ku7otTW7UbwX0+PICVgvw=
 github.com/jaxxstorm/pulumi-aws-vpc/go v0.0.0-20200712170006-0d1a95681dd5 h1:YTLa72+fd4OzV66hmsXiJi+60OKgl0ftA52kpASXdjI=
 github.com/jaxxstorm/pulumi-aws-vpc/go v0.0.0-20200712170006-0d1a95681dd5/go.mod h1:s+tGGYcWhYVxeYxs/mVy78XqHoL9VVX/5PFsQxsAA64=
+github.com/jaxxstorm/pulumi-aws-vpc/go v0.0.0-20200713175306-b9af07a37dab h1:xfRazmKbUL8PmwYQ6i6VRE+Svi+kma/aX6Ii2VjiOHk=
+github.com/jaxxstorm/pulumi-aws-vpc/go v0.0.0-20200713175306-b9af07a37dab/go.mod h1:s+tGGYcWhYVxeYxs/mVy78XqHoL9VVX/5PFsQxsAA64=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=

@@ -1,0 +1,3 @@
+name: grafana.go
+runtime: go
+description: Run Grafana in Fargate

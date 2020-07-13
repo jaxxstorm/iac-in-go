@@ -1,0 +1,3 @@
+name: alb.go
+runtime: go
+description: A shared ALB for multiple applications

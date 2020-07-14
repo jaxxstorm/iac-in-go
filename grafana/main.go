@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/pulumi/pulumi-random/sdk/v2/go/random"
+
 	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/ec2"
-
-	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/route53"
-
-	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/lb"
-
 	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/ecs"
-
+	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/lb"
+	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/route53"
+	"github.com/pulumi/pulumi-mysql/sdk/v2/go/mysql"
 	"github.com/pulumi/pulumi/sdk/v2/go/pulumi"
 )
 
@@ -43,6 +42,15 @@ func main() {
 		alb, err := pulumi.NewStackReference(ctx, albSlug, nil)
 		if err != nil {
 			return fmt.Errorf("Error getting alb stack reference: %w", err)
+		}
+
+		/*
+		 * Grab the load balancer stack outputs
+		 */
+		dbSlug := fmt.Sprintf("jaxxstorm/db.go/%v", ctx.Stack())
+		db, err := pulumi.NewStackReference(ctx, dbSlug, nil)
+		if err != nil {
+			return fmt.Errorf("Error getting db stack reference: %w", err)
 		}
 
 		/*
@@ -138,6 +146,62 @@ func main() {
 			Type:   pulumi.String("CNAME"),
 			ZoneId: pulumi.String("Z08976112HCEEMBICZ9N0"),
 		})
+		if err != nil {
+			return err
+		}
+
+		/*
+		 * Set up the MySQL database
+		 */
+		dbProvider, err := mysql.NewProvider(ctx, "db-provider", &mysql.ProviderArgs{
+			// Endpoint: db.GetStringOutput(pulumi.String("endpoint")),
+			Endpoint: pulumi.String("db399f5eb.chuqccm8uxqx.us-west-2.rds.amazonaws.com"),
+			Username: db.GetStringOutput(pulumi.String("username")),
+			Password: db.GetStringOutput(pulumi.String("password")),
+		})
+		if err != nil {
+			return err
+		}
+
+		_ = dbProvider
+
+		/*
+		 * Generate a random password using the random provider
+		 */
+		grafanaUserPassword, err := random.NewRandomPassword(ctx, "db-password", &random.RandomPasswordArgs{
+			Length: pulumi.Int(20),
+		}, pulumi.Provider(dbProvider))
+		if err != nil {
+			return err
+		}
+
+		_ = grafanaUserPassword
+
+		/*
+			grafanaDatabase, err := mysql.NewDatabase(ctx, "grafana", &mysql.DatabaseArgs{
+				Name: pulumi.String("grafana"),
+			}, pulumi.Provider(dbProvider))
+			if err != nil {
+				return err
+			}
+		*/
+
+		grafanaUser, err := mysql.NewUser(ctx, "grafana", &mysql.UserArgs{
+			User:              pulumi.String("grafana"),
+			PlaintextPassword: grafanaUserPassword.Result,
+		}, pulumi.Provider(dbProvider))
+
+		_ = grafanaUser
+
+		/*
+			_, err = mysql.NewGrant(ctx, "grafana", &mysql.GrantArgs{
+				User:     grafanaUser.User,
+				Database: grafanaDatabase.Name,
+				Privileges: pulumi.StringArray{
+					pulumi.String("ALL"),
+				},
+			}, pulumi.Provider(dbProvider))
+		*/
 
 		/*
 		 * Define the JSON task definition for grafana
@@ -152,6 +216,38 @@ func main() {
 					"protocol":      "tcp",
 				},
 			},
+			/*
+				"environment": []interface{}{
+					map[string]interface{}{
+						"name":  "GF_DATABASE_HOST",
+						"value": 3000,
+					},
+					map[string]interface{}{
+						"name":  "GF_DATABASE_TYPE",
+						"value": 3000,
+					},
+					map[string]interface{}{
+						"name":  "GF_DATABASE_USER",
+						"value": "grafana",
+					},
+					map[string]interface{}{
+						"name":  "GF_DATABASE_PASSWORD",
+						"value": "grafana",
+					},
+					map[string]interface{}{
+						"name":  "GF_AUTH_ANONYMOUS_ENABLED",
+						"value": "true",
+					},
+					map[string]interface{}{
+						"name":  "GF_SECURITY_ADMIN_PASSWORD",
+						"value": "admin",
+					},
+					map[string]interface{}{
+						"name":  "GF_SECURITY_ROOT_URL",
+						"value": "https://grafana.aws.briggs.work",
+					},
+				},
+			*/
 		}})
 		if err != nil {
 			return err

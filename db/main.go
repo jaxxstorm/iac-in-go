@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/ec2"
+
 	"github.com/pulumi/pulumi-aws/sdk/v2/go/aws/rds"
 	"github.com/pulumi/pulumi-random/sdk/v2/go/random"
 	"github.com/pulumi/pulumi/sdk/v2/go/pulumi"
@@ -29,7 +31,7 @@ func main() {
 		/*
 		 * Create an RDS subnet group which can be used by the database
 		 */
-		_, err = rds.NewSubnetGroup(ctx, "db-subnet-group", &rds.SubnetGroupArgs{
+		dbSubnetGroup, err := rds.NewSubnetGroup(ctx, "db-subnet-group", &rds.SubnetGroupArgs{
 			SubnetIds: subnets,
 			Tags: pulumi.Map{
 				"Owner": pulumi.String("lbriggs"),
@@ -40,12 +42,48 @@ func main() {
 		}
 
 		/*
+		 * Create a security group to authorize access to the database
+		 */
+		dbSecurityGroup, err := ec2.NewSecurityGroup(ctx, "rds-db-security-group", &ec2.SecurityGroupArgs{
+			Description: pulumi.String("Allow traffic into RDS database"),
+			VpcId:       vpc.GetStringOutput(pulumi.String("id")),
+			Ingress: &ec2.SecurityGroupIngressArray{
+				&ec2.SecurityGroupIngressArgs{
+					Protocol: pulumi.String("icmp"),
+					FromPort: pulumi.Int(0),
+					ToPort:   pulumi.Int(0),
+					CidrBlocks: pulumi.StringArray{
+						pulumi.String("0.0.0.0/0"),
+					},
+				},
+				&ec2.SecurityGroupIngressArgs{
+					Protocol: pulumi.String("tcp"),
+					FromPort: pulumi.Int(3306),
+					ToPort:   pulumi.Int(3306),
+					CidrBlocks: pulumi.StringArray{
+						pulumi.String("172.1.0.0/16"),
+					},
+				},
+			},
+			Egress: &ec2.SecurityGroupEgressArray{
+				&ec2.SecurityGroupEgressArgs{
+					Protocol: pulumi.String("-1"),
+					FromPort: pulumi.Int(0),
+					ToPort:   pulumi.Int(0),
+					CidrBlocks: pulumi.StringArray{
+						pulumi.String("0.0.0.0/0"),
+					},
+				},
+			},
+			Tags: pulumi.Map{
+				"Owner": pulumi.String("lbriggs"),
+			},
+		})
+		/*
 		 * Generate a random password using the random provider
 		 */
 		dbPassword, err := random.NewRandomPassword(ctx, "db-password", &random.RandomPasswordArgs{
-			Length:          pulumi.Int(20),
-			Special:         pulumi.Bool(true),
-			OverrideSpecial: pulumi.String(fmt.Sprintf("%v%v%v", "_", "%", "@")),
+			Length: pulumi.Int(20),
 		})
 		if err != nil {
 			return err
@@ -55,14 +93,19 @@ func main() {
 		 * Create a new database
 		 */
 		database, err := rds.NewInstance(ctx, "db", &rds.InstanceArgs{
-			AllocatedStorage: pulumi.Int(20),
-			Engine:           pulumi.String("mysql"),
-			EngineVersion:    pulumi.String("5.7"),
-			InstanceClass:    pulumi.String("db.t2.micro"),
-			Name:             pulumi.String("appdb"),
-			StorageType:      pulumi.String("gp2"),
-			Password:         dbPassword.Result,
-			Username:         pulumi.String("admin"),
+			AllocatedStorage:        pulumi.Int(20),
+			Engine:                  pulumi.String("mysql"),
+			EngineVersion:           pulumi.String("5.7"),
+			InstanceClass:           pulumi.String("db.t2.micro"),
+			FinalSnapshotIdentifier: pulumi.String("lbriggs-db"),
+			Name:                    pulumi.String("appdb"),
+			StorageType:             pulumi.String("gp2"),
+			Password:                dbPassword.Result,
+			Username:                pulumi.String("admin"),
+			DbSubnetGroupName:       dbSubnetGroup.Name,
+			VpcSecurityGroupIds: pulumi.StringArray{
+				dbSecurityGroup.ID(),
+			},
 			Tags: pulumi.Map{
 				"Owner": pulumi.String("lbriggs"),
 			},

@@ -1,0 +1,4 @@
+config:
+  aws:region: us-west-2
+  bastion.go:tailScaleHostKey:
+    secure: AAABAL6CMGtMY+zFJCrZXxP/sIjEaaZcIYBx7YT9kkpnvd7r1qKs+aWcohpxD8WNY0TjFGdiMjmykToJ/Z4=

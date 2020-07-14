@@ -1,0 +1,3 @@
+name: bastion.go
+runtime: go
+description: A Bastion host with AWS SSM and Tailscale

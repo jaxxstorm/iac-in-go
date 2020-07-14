@@ -11,18 +11,24 @@ import (
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 
-		// we construct a slug which references another stack to use in our stack reference
+		/*
+		 * Construct a slug which references another stack to use in our stack reference
+		 */
 		slug := fmt.Sprintf("jaxxstorm/vpc.go/%v", ctx.Stack())
 		vpc, err := pulumi.NewStackReference(ctx, slug, nil)
 		if err != nil {
 			fmt.Errorf("Error getting vpc stack reference: %w", err)
 		}
 
-		// we have to do some type casting here to ensure the subnets are in the right format
-		// we need for the subnet group
+		/*
+		 * we have to do some type casting here to ensure the subnets are in the right format
+		 * we need for the subnet group
+		 */
 		subnets := pulumi.StringArrayOutput(vpc.GetOutput(pulumi.String("privateSubnets")))
 
-		// create an RDS subnet group which can be used by the database
+		/*
+		 * Create an RDS subnet group which can be used by the database
+		 */
 		_, err = rds.NewSubnetGroup(ctx, "db-subnet-group", &rds.SubnetGroupArgs{
 			SubnetIds: subnets,
 			Tags: pulumi.Map{
@@ -33,7 +39,9 @@ func main() {
 			return err
 		}
 
-		// generate a random password using the random provider
+		/*
+		 * Generate a random password using the random provider
+		 */
 		dbPassword, err := random.NewRandomPassword(ctx, "db-password", &random.RandomPasswordArgs{
 			Length:          pulumi.Int(20),
 			Special:         pulumi.Bool(true),
@@ -43,7 +51,9 @@ func main() {
 			return err
 		}
 
-		// create a new database
+		/*
+		 * Create a new database
+		 */
 		database, err := rds.NewInstance(ctx, "db", &rds.InstanceArgs{
 			AllocatedStorage: pulumi.Int(20),
 			Engine:           pulumi.String("mysql"),

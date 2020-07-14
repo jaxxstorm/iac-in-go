@@ -8,6 +8,10 @@ import (
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 
+		/*
+		 * Create a VPC
+		 * this uses a component resource, which is defined on line 4
+		 */
 		awsVpc, err := vpc.NewVpc(ctx, "lbriggs", vpc.Args{
 			BaseCidr:    "172.1.0.0/16",
 			Description: "lbriggs-vpc",

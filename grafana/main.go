@@ -73,6 +73,9 @@ func main() {
 					},
 				},
 			},
+			Tags: pulumi.Map{
+				"Owner": pulumi.String("lbriggs"),
+			},
 		})
 
 		/*
@@ -87,6 +90,9 @@ func main() {
 			VpcId:      vpc.GetStringOutput(pulumi.String("id")),
 			HealthCheck: &lb.TargetGroupHealthCheckArgs{
 				Path: pulumi.String("/api/health"),
+			},
+			Tags: pulumi.Map{
+				"Owner": pulumi.String("lbriggs"),
 			},
 		})
 		if err != nil {
@@ -163,6 +169,9 @@ func main() {
 			RequiresCompatibilities: pulumi.StringArray{pulumi.String("FARGATE")},
 			ExecutionRoleArn:        cluster.GetStringOutput(pulumi.String("taskExecRoleArn")),
 			ContainerDefinitions:    pulumi.String(grafanaTaskDefinitionJSON),
+			Tags: pulumi.Map{
+				"Owner": pulumi.String("lbriggs"),
+			},
 		})
 		if err != nil {
 			return err
@@ -195,6 +204,9 @@ func main() {
 					ContainerName:  pulumi.String("grafana"),
 					ContainerPort:  pulumi.Int(3000),
 				},
+			},
+			Tags: pulumi.Map{
+				"Owner": pulumi.String("lbriggs"),
 			},
 		})
 		if err != nil {

@@ -11,18 +11,25 @@ import (
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 
-		// create an ECS cluster that can run fargate tasks
+		/*
+		 * Create an ECS cluster that can run fargate tasks
+		 */
 		cluster, err := ecs.NewCluster(ctx, "lbriggs-cluster", &ecs.ClusterArgs{
 			CapacityProviders: pulumi.StringArray{
 				pulumi.String("FARGATE_SPOT"),
 				pulumi.String("FARGATE"),
+			},
+			Tags: pulumi.Map{
+				"Owner": pulumi.String("lbriggs"),
 			},
 		})
 		if err != nil {
 			return err
 		}
 
-		// IAM policy principal
+		/*
+		 * IAM policy principal
+		 */
 		assumeRolePolicyJSON, _ := json.Marshal(map[string]interface{}{
 			"Version": "2012-10-17",
 			"Statement": []interface{}{
@@ -36,15 +43,22 @@ func main() {
 			},
 		})
 
-		// create the IAM role that allows the running cluster services to use ECS
+		/*
+		 * Create the IAM role that allows the running cluster services to use ECS
+		 */
 		taskRole, err := iam.NewRole(ctx, "task-exec-role", &iam.RoleArgs{
 			AssumeRolePolicy: pulumi.String(assumeRolePolicyJSON),
+			Tags: pulumi.Map{
+				"Owner": pulumi.String("lbriggs"),
+			},
 		})
 		if err != nil {
 			return err
 		}
 
-		// attach the policy to the role that allows running on ECS
+		/*
+		 * Attach the policy to the role that allows running on ECS
+		 */
 		_, err = iam.NewRolePolicyAttachment(ctx, "task-exec-policy", &iam.RolePolicyAttachmentArgs{
 			Role:      taskRole.Name,
 			PolicyArn: pulumi.String("arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"),

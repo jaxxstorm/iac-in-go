@@ -12,15 +12,22 @@ import (
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 
-		// grab the vpc cluster stack outputs
+		/*
+		 * Grab the VPC stack outputs
+		 * FIXME: make these configurable
+		 */
 		vpcSlug := fmt.Sprintf("jaxxstorm/vpc.go/%v", ctx.Stack())
 		vpc, err := pulumi.NewStackReference(ctx, vpcSlug, nil)
 		if err != nil {
 			return fmt.Errorf("Error getting vpc stack reference: %w", err)
 		}
 
+		/*
+		 * Create a security group for the ALB that allows
+		 * HTTPS & HTTP traffic
+		 */
 		webSecurityGroup, err := ec2.NewSecurityGroup(ctx, "web", &ec2.SecurityGroupArgs{
-			VpcId:       vpc.GetStringOutput((pulumi.String("id"))),
+			VpcId:       vpc.GetStringOutput(pulumi.String("id")),
 			Description: pulumi.String("Web security for ALB"),
 			Ingress: &ec2.SecurityGroupIngressArray{
 				&ec2.SecurityGroupIngressArgs{
@@ -52,13 +59,21 @@ func main() {
 			},
 		})
 
+		/*
+		 * Create an ALB
+		 * We use the public subnets from the VPC stack as an input
+		 */
 		alb, err := lb.NewLoadBalancer(ctx, "web", &lb.LoadBalancerArgs{
 			SecurityGroups: pulumi.StringArray{
 				webSecurityGroup.ID(),
 			},
-			Subnets: pulumi.StringArrayOutput(vpc.GetOutput(pulumi.String("privateSubnets"))),
+			Subnets: pulumi.StringArrayOutput(vpc.GetOutput(pulumi.String("publicSubnets"))),
 		})
 
+		/*
+		 * Add a HTTP listener to the ALB
+		 * This always redirects to HTTPs as a 301
+		 */
 		httpListener, err := lb.NewListener(ctx, "http", &lb.ListenerArgs{
 			LoadBalancerArn: alb.Arn,
 			Port:            pulumi.Int(80),
@@ -74,9 +89,15 @@ func main() {
 			},
 		}, pulumi.Parent(alb))
 
+		/*
+		 * Create the HTTPS listener, with a default fixed
+		 * response if the host header isn't specified
+		 */
 		httpsListener, err := lb.NewListener(ctx, "https", &lb.ListenerArgs{
 			LoadBalancerArn: alb.Arn,
 			Port:            pulumi.Int(443),
+			Protocol:        pulumi.String("HTTPS"),
+			CertificateArn:  pulumi.String("arn:aws:acm:us-west-2:616138583583:certificate/bb362d39-6233-415b-8270-b459128f2cbe"),
 			DefaultActions: &lb.ListenerDefaultActionArray{
 				&lb.ListenerDefaultActionArgs{
 					Type: pulumi.String("fixed-response"),
@@ -89,7 +110,11 @@ func main() {
 			},
 		}, pulumi.Parent(alb))
 
+		/*
+		 * Export some values for other stacks
+		 */
 		ctx.Export("arn", alb.Arn)
+		ctx.Export("dnsName", alb.DnsName)
 		ctx.Export("httpListenerArn", httpListener.Arn)
 		ctx.Export("httpsListenerArn", httpsListener.Arn)
 

@@ -22,7 +22,8 @@ func main() {
 				pulumi.String("us-west-2c"),
 			},
 			BaseTags: pulumi.StringMap{
-				"Owner": pulumi.String("lbriggs"),
+				"Owner":                         pulumi.String("lbriggs"),
+				"kubernetes.io/cluster/lbriggs": pulumi.String("shared"),
 			},
 			Endpoints: vpc.Endpoints{
 				S3:       true,

@@ -130,6 +130,7 @@ func main() {
 
 		// Create EKS Cluster
 		eksCluster, err := eks.NewCluster(ctx, "eks-cluster", &eks.ClusterArgs{
+			Name:    pulumi.String("lbriggs"),
 			RoleArn: pulumi.StringInput(eksRole.Arn),
 			VpcConfig: &eks.ClusterVpcConfigArgs{
 				PublicAccessCidrs: pulumi.StringArray{

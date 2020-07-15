@@ -57,6 +57,13 @@ func main() {
 						"enabled": pulumi.Bool(true),
 					},
 				},
+				"proxy": pulumi.Map{
+					"annotations": pulumi.Map{
+						"service.beta.kubernetes.io/aws-load-balancer-backend-protocol": pulumi.String("http"),
+						"service.beta.kubernetes.io/aws-load-balancer-ssl-ports":        pulumi.String("https"),
+						"service.beta.kubernetes.io/aws-load-balancer-ssl-cert":         pulumi.String("arn:aws:acm:us-west-2:616138583583:certificate/bb362d39-6233-415b-8270-b459128f2cbe"),
+					},
+				},
 			},
 			Namespace: pulumi.String("kong"),
 		}, pulumi.Provider(provider), pulumi.Parent(namespace))

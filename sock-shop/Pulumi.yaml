@@ -1,0 +1,3 @@
+name: sock-shop.go
+runtime: go
+description: The Sock-Shop example application

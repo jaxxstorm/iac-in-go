@@ -59,9 +59,13 @@ func main() {
 				},
 				"proxy": pulumi.Map{
 					"annotations": pulumi.Map{
-						"service.beta.kubernetes.io/aws-load-balancer-backend-protocol": pulumi.String("http"),
-						"service.beta.kubernetes.io/aws-load-balancer-ssl-ports":        pulumi.String("https"),
-						"service.beta.kubernetes.io/aws-load-balancer-ssl-cert":         pulumi.String("arn:aws:acm:us-west-2:616138583583:certificate/bb362d39-6233-415b-8270-b459128f2cbe"),
+						"service.beta.kubernetes.io/aws-load-balancer-backend-protocol":       pulumi.String("http"),
+						"service.beta.kubernetes.io/aws-load-balancer-ssl-ports":              pulumi.String("443"),
+						"service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy": pulumi.String("ELBSecurityPolicy-TLS-1-2-2017-01"),
+						"service.beta.kubernetes.io/aws-load-balancer-ssl-cert":               pulumi.String("arn:aws:acm:us-west-2:616138583583:certificate/bb362d39-6233-415b-8270-b459128f2cbe"),
+					},
+					"tls": pulumi.Map{
+						"overrideServiceTargetPort": pulumi.Int(8000),
 					},
 				},
 			},

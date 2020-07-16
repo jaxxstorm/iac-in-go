@@ -1,3 +1,7 @@
 name: sock-shop.go
-runtime: go
+runtime: 
+  name: go
+  options:
+    binary: sock-shop
+
 description: The Sock-Shop example application

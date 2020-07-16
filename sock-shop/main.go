@@ -108,6 +108,8 @@ func main() {
 			return fmt.Errorf("error creating chart: %w", err)
 		}
 
+        ctx.Export("address",  pulumi.String("sock-shop.aws.briggs.work"))
+
 		return nil
 	})
 }
